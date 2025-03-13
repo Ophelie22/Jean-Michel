@@ -1,0 +1,14 @@
+# Read the documentation: https://github.com/FriendsOfSymfony/FOSElasticaBundle/blob/master/doc/setup.md
+fos_elastica:
+  clients:
+    default: { host: localhost, port: 9200 }
+  indexes:
+    freelance:
+      properties:
+        firstName: ~
+        lastName: ~
+      persistence:
+        driver: orm
+        model: App\Entity\FreelanceConso
+        provider: ~
+        finder: ~
