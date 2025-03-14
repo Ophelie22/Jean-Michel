@@ -1,0 +1,5 @@
+services:
+    Elasticsearch\Client:
+        factory: ['Elasticsearch\ClientBuilder', 'create']
+        calls:
+            - setHosts: [['host' => 'elasticsearch', 'port' => 9200]] 

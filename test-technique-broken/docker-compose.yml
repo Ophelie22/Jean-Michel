@@ -19,6 +19,7 @@ services:
       - IS_DOCKER=1
     links:
       - mysql
+      - elasticsearch
     volumes:
       - .:/var/application
 
