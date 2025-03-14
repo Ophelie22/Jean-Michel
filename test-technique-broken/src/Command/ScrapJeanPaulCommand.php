@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Dto\FreelanceJeanPaulDto;
+use App\Dto\FreelanceLinkedInDto;
 use App\Message\InsertFreelanceJeanPaulMessage;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -29,12 +30,23 @@ class ScrapJeanPaulCommand extends Command
 
         $jsonData = file_get_contents('./datas/jean-paul.json');
 
-        $jeanPaulDtos = $this->serializer->deserialize($jsonData, FreelanceJeanPaulDto::class . '[]', 'json');
+        try {
+            // Désérialisation du JSON dans les objets FreelanceJeanPaulDto
+            $jeanPaulDtos = $this->serializer->deserialize($jsonData, FreelanceJeanPaulDto::class . '[]', 'json');
+        } catch (\Symfony\Component\Serializer\Exception\NotEncodableValueException $e) {
+            // En cas d'erreur de désérialisation, afficher le message d'erreur
+            $io->error("Error during deserialization: " . $e->getMessage());
+            return Command::FAILURE; // Retourner un code d'échec
+        }
+
+        $io->success('Data deserialized successfully');
 
         /** @var FreelanceJeanPaulDto $jeanPaulDto */
         foreach ($jeanPaulDtos as $jeanPaulDto) {
             $this->bus->dispatch(new InsertFreelanceJeanPaulMessage($jeanPaulDto));
+            $io->note('Dispatching message for ' . $jeanPaulDto->firstName . ' ' . $jeanPaulDto->lastName);
         }
+        $io->success('All messages have been dispatched.');
 
         return Command::SUCCESS;
     }

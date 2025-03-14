@@ -14,13 +14,12 @@ final readonly class InsertFreelanceJeanPaulMessageHandler
     public function __construct(
         private InsertFreelanceJeanPaul $insertFreelanceJeanPaul,
         private LockFactory             $lockFactory,
-        private EntityManagerInterface  $entityManager)
-    {
-    }
+        private EntityManagerInterface  $entityManager
+    ) {}
 
     public function __invoke(InsertFreelanceJeanPaulMessage $message): void
     {
-        die('debug');
+        //die('debug');
         $lock = $this->lockFactory->createLock('insert_freelance');
 
         $lock->acquire(true);

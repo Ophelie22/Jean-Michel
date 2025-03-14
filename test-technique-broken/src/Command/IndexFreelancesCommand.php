@@ -27,12 +27,12 @@ class IndexFreelancesCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $freelances = $this->entityManager->getRepository(Freelance::class)->findAll();
-        
+
         foreach ($freelances as $freelance) {
-            $this->searchService->indexFreelance($freelance);
+            $this->searchService->index($freelance);
         }
 
         $output->writeln('All freelances have been indexed.');
         return Command::SUCCESS;
     }
-} 
+}

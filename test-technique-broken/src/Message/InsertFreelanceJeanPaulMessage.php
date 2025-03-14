@@ -6,8 +6,7 @@ use App\Dto\FreelanceJeanPaulDto;
 
 final class InsertFreelanceJeanPaulMessage
 {
-     public function __construct(
-         public FreelanceJeanPaulDto $dto
-     ) {
-     }
+    public function __construct(
+        public FreelanceJeanPaulDto $dto
+    ) {}
 }

@@ -39,10 +39,10 @@ class TechnicalTest extends KernelTestCase
 
         // Affiche les valeurs après désérialisation pour vérifier
         foreach ($linkedInDtos as $linkedInDto) {
-            echo "First Name: " . $linkedInDto->firstName . "\n";
-            echo "Last Name: " . $linkedInDto->lastName . "\n";
-            echo "Job Title: " . $linkedInDto->jobTitle . "\n"; // Vérifier si jobTitle est bien initialisé
-            echo "URL: " . $linkedInDto->url . "\n";
+            //echo "First Name: " . $linkedInDto->firstName . "\n";
+            //echo "Last Name: " . $linkedInDto->lastName . "\n";
+            //echo "Job Title: " . $linkedInDto->jobTitle . "\n"; // Vérifier si jobTitle est bien initialisé
+            //echo "URL: " . $linkedInDto->url . "\n";
 
             // Vérification que jobTitle est bien initialisé
             $this->assertNotNull($linkedInDto->jobTitle, 'jobTitle is null');
@@ -69,8 +69,14 @@ class TechnicalTest extends KernelTestCase
 
         $jsonData = file_get_contents('./datas/jean-paul.json');
 
-        $jeanPaulDtos = $serializer->deserialize($jsonData, FreelanceJeanPaulDto::class . '[]', 'json');
+        $jeanPaulDtos = $serializer->deserialize($jsonData, 'App\\Dto\\FreelanceJeanPaulDto[]', 'json');
+
+        //message pour valider que le json est bien désérialisé
         $this->assertNotEmpty($jeanPaulDtos, '$jeanPaulDtos is null');
+        //message pour valider que le json est bien désérialisé
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo 'JSON Error: ' . json_last_error_msg();
+        }
 
 
         foreach ($jeanPaulDtos as $jeanPaulDto) {
