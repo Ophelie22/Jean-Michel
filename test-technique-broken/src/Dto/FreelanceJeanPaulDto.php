@@ -10,15 +10,16 @@ class FreelanceJeanPaulDto
         #[Assert\NotBlank]
         #[Assert\NotNull]
         public string $firstName,
+
         #[Assert\NotBlank]
         #[Assert\NotNull]
         public string $lastName,
+
         #[Assert\NotBlank]
         #[Assert\NotNull]
-        public string $jobTitle,
+        public string $jobTitle, // Assurez-vous que jobTitle est initialisé
+
         #[Assert\Type('integer')]
         public int $jeanPaulId
-    )
-    {
-    }
+    ) {}
 }

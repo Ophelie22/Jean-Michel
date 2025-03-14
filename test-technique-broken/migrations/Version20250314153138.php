@@ -10,11 +10,11 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250313210900 extends AbstractMigration
+final class Version20250314153138 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return ' Migration pour la table freelance';
+        return '';
     }
 
     public function up(Schema $schema): void

@@ -26,4 +26,12 @@ class FreelanceLinkedInDto
     #[Assert\NotNull]
     #[Serializer\SerializedName('url')]
     public string $url;
+
+    public function __construct(string $firstName = '', string $lastName = '', string $jobTitle = '', string $url = '')
+    {
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+        $this->jobTitle = $jobTitle;
+        $this->url = $url;
+    }
 }

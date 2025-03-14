@@ -24,7 +24,6 @@ class TechnicalTest extends KernelTestCase
 
         $this->assertTrue($isDocker);
     }
-
     public function testImportLinkedIn(): void
     {
         self::bootKernel();
@@ -34,21 +33,32 @@ class TechnicalTest extends KernelTestCase
 
         $jsonData = file_get_contents('./datas/linkedin.json');
 
+        // Désérialisation du JSON
         $linkedInDtos = $serializer->deserialize($jsonData, FreelanceLinkedInDto::class . '[]', 'json');
         $this->assertNotEmpty($linkedInDtos, '$linkedInDtos is null');
 
+        // Affiche les valeurs après désérialisation pour vérifier
         foreach ($linkedInDtos as $linkedInDto) {
+            echo "First Name: " . $linkedInDto->firstName . "\n";
+            echo "Last Name: " . $linkedInDto->lastName . "\n";
+            echo "Job Title: " . $linkedInDto->jobTitle . "\n"; // Vérifier si jobTitle est bien initialisé
+            echo "URL: " . $linkedInDto->url . "\n";
+
+            // Vérification que jobTitle est bien initialisé
+            $this->assertNotNull($linkedInDto->jobTitle, 'jobTitle is null');
+
+            // Traitement du FreelanceLinkedIn
             $fLinkedIn = $insertData->insertFreelanceLinkedIn($linkedInDto);
 
             $this->assertNotNull($fLinkedIn, 'FreelanceLinkedIn is null');
             $this->assertNotNull($fLinkedIn->getCreatedAt(), '$fLinkedIn::createdAt is null');
             $this->assertNotNull($fLinkedIn->getUpdatedAt(), '$fLinkedIn::updatedAt is null');
             $this->assertTrue($fLinkedIn->getUpdatedAt() < Carbon::now());
-
         }
 
         $entityManager->flush();
     }
+
 
     public function testImportJeanPaul(): void
     {

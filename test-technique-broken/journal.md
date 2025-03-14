@@ -92,11 +92,11 @@ C'est que le module `amqp` est déjà chargé.
 
 ### Routes existantes :
 
-| Name                 | Method | Scheme | Host | Path                    |
-|----------------------|--------|--------|------|-------------------------|
-| _preview_error      | ANY    | ANY    | ANY  | /_error/{code}.{_format} |
-| freelances_search   | GET    | ANY    | ANY  | /freelances              |
-| status_up          | POST   | ANY    | ANY  | /status/up               |
+| Name              | Method | Scheme | Host | Path                       |
+| ----------------- | ------ | ------ | ---- | -------------------------- |
+| \_preview_error   | ANY    | ANY    | ANY  | /\_error/{code}.{\_format} |
+| freelances_search | GET    | ANY    | ANY  | /freelances                |
+| status_up         | POST   | ANY    | ANY  | /status/up                 |
 
 ## 6. Installation de bundles manquants
 
@@ -123,7 +123,7 @@ php bin/console debug:container --parameter database_url
 php bin/console doctrine:query:sql "SHOW TABLES;"
 ```
 
-  - **Problème :** `0 rows in the table`
+- **Problème :** `0 rows in the table`
 
 ## 8. Rappel pour relancer l'application
 
@@ -210,5 +210,27 @@ php bin/phpunit --filter testImportLinkedIn tests/TechnicalTest.php
 
 ---
 
-Cette version met en avant les **TODO**, les **problèmes rencontrés**, et le **suivi des tests** comme tu l'avais demandé. 😊 N'hésite pas à me dire si tu veux d'autres ajustements ! 🚀
+php bin/console debug:container --env-vars | grep ELASTICSEARCH_URL
+ophelie@ophelie-BMH-WCX9:~/jm-test-technique-060325/test-technique-broken$ export IS_DOCKER=true
+ophelie@ophelie-BMH-WCX9:~/jm-test-technique-060325/test-technique-broken$ php bin/phpunit --filter testEnvDocker tests/TechnicalTest.php
+PHP Warning: Module "amqp" is already loaded in Unknown on line 0
+PHPUnit 9.6.22 by Sebastian Bergmann and contributors.
 
+Testing App\Tests\TechnicalTest
+. 1 / 1 (100%)
+
+Time: 00:00.062, Memory: 14.00 MB
+
+OK (1 test, 1 assertion)
+
+A quoi sert le ScrapLinkCommand ?
+
+- Récupérer les données de LinkedIn
+- Les insérer dans la base de données
+
+Quel est le rôle du message InsertFreelanceLinkedInMessage ?
+ommande Symfony (ScrapLinkedInCommand) :
+La commande scrap:linkedin lit un fichier JSON, le désérialise en objets DTO, puis envoie ces objets au Message Bus pour un traitement ultérieur.
+
+Fichier JSON :
+Le fichier jean-paul.json contient les données à désérialiser en objets DTO.
