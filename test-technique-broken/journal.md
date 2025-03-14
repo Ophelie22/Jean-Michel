@@ -234,3 +234,6 @@ La commande scrap:linkedin lit un fichier JSON, le désérialise en objets DTO, 
 
 Fichier JSON :
 Le fichier jean-paul.json contient les données à désérialiser en objets DTO.
+
+Ajout du circular_reference_handler dans le contexte : Le contexte circular_reference_handler permet de spécifier comment gérer les références circulaires. Ici, nous avons choisi de simplement retourner l'ID de l'objet pour éviter une boucle infinie dans les relations entre objets.
+Gestion des groupes : Nous avons conservé les groupes de sérialisation dans le contexte ('groups' => $groups), car tu en as besoin pour spécifier quelles propriétés sérialiser.

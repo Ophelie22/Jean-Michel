@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[AsCommand(
     name: 'app:freelance:detail',
@@ -20,16 +21,15 @@ class FreelanceDetailCommand extends Command
 {
     public function __construct(
         private readonly FreelanceSerializer $freelanceSerializer,
-        private readonly EntityManagerInterface $entityManager)
-    {
+        private readonly EntityManagerInterface $entityManager
+    ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this
-            ->addArgument('freelanceId', InputArgument::REQUIRED, 'Freelance ID')
-        ;
+            ->addArgument('freelanceId', InputArgument::REQUIRED, 'Freelance ID');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -42,9 +42,13 @@ class FreelanceDetailCommand extends Command
             $io->error('Freelance not found');
             return Command::FAILURE;
         }
-
+        // Utilisation d'un gestionnaire de référence circulaire
+        $context = [
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();  // On retourne simplement l'ID pour éviter une boucle infinie
+            },
+        ];
         $freelanceJson = $this->freelanceSerializer->serializeFreelance($freelance, ['freelance_detail']);
-
         dump($freelanceJson);
         return Command::SUCCESS;
     }
