@@ -235,5 +235,92 @@ La commande scrap:linkedin lit un fichier JSON, le désérialise en objets DTO, 
 Fichier JSON :
 Le fichier jean-paul.json contient les données à désérialiser en objets DTO.
 
+# Point nouveau que je connaissais pas
+
 Ajout du circular_reference_handler dans le contexte : Le contexte circular_reference_handler permet de spécifier comment gérer les références circulaires. Ici, nous avons choisi de simplement retourner l'ID de l'objet pour éviter une boucle infinie dans les relations entre objets.
 Gestion des groupes : Nous avons conservé les groupes de sérialisation dans le contexte ('groups' => $groups), car tu en as besoin pour spécifier quelles propriétés sérialiser.
+
+Today: Connexion à ElasticSearch ok mais j'etais partie ds la mauuvaise directin en voulant mettre une barre de recherche sur une page twig le premier jour à mon avis
+manip et resultatat :
+
+curl http://localhost:9201
+{
+"name" : "423ac1b1157b",
+"cluster_name" : "docker-cluster",
+"cluster_uuid" : "F2PNM0yHT6ei_zavUxbZYg",
+"version" : {
+"number" : "7.16.3",
+"build_flavor" : "default",
+"build_type" : "docker",
+"build_hash" : "4e6e4eab2297e949ec994e688dad46290d018022",
+"build_date" : "2022-01-06T23:43:02.825887787Z",
+"build_snapshot" : false,
+"lucene_version" : "8.10.1",
+"minimum_wire_compatibility_version" : "6.8.0",
+"minimum_index_compatibility_version" : "6.0.0-beta1"
+},
+"tagline" : "You Know, for Search"
+}
+PROBLEME: la connexion se fait avec ElasticSearck mais par contre ca recupere pas les données de la base de données:
+curl -X GET "localhost:9201/freelances/\_search?pretty"
+{
+"took" : 9,
+"timed_out" : false,
+"\_shards" : {
+"total" : 1,
+"successful" : 1,
+"skipped" : 0,
+"failed" : 0
+},
+"hits" : {
+"total" : {
+"value" : 1,
+"relation" : "eq"
+},
+"max_score" : 1.0,
+"hits" : [
+{
+"_index" : "freelances",
+"_type" : "_doc",
+"_id" : "1",
+"_score" : 1.0,
+"_source" : {
+"firstName" : "John",
+"lastName" : "Doe",
+"jobTitle" : "Developer"
+}
+}
+]
+}
+}
+Commande de deugage :
+php bin/console debug:container FreelanceSearchService
+
+Ok je crois que le mapping est pas juste car car j'ontiens les resultas des donnes rentrees manuelement en faisant :
+curl -X GET "localhost:9201/freelances/\_mapping?pretty"
+
+15/03/2025
+Rectification de mon controller FreelanceController.php
+
+TODO; a voir si je le supprime ou pas car y'a une route qui va faire un fichier twig , donc voir sir je la supprime oou pas ou si je met un template en place si j'ai le temps
+
+Mapping rectifié pour Elasticsearch mais un statut Yellow:
+curl -X GET "localhost:9201/\_cluster/health?pretty"
+{
+"cluster_name" : "docker-cluster",
+"status" : "yellow",
+"timed_out" : false,
+"number_of_nodes" : 1,
+"number_of_data_nodes" : 1,
+"active_primary_shards" : 4,
+"active_shards" : 4,
+"relocating_shards" : 0,
+"initializing_shards" : 0,
+"unassigned_shards" : 1,
+"delayed_unassigned_shards" : 0,
+"number_of_pending_tasks" : 0,
+"number_of_in_flight_fetch" : 0,
+"task_max_waiting_in_queue_millis" : 0,
+"active_shards_percent_as_number" : 80.0
+}
+sudo docker logs test-technique-broken-elasticsearch-1

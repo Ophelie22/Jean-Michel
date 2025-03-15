@@ -19,7 +19,7 @@ readonly class FreelanceSearchService
         private LoggerInterface $logger
     ) {
         $this->elasticsearchClient = ClientBuilder::create()
-            ->setHosts(['test-technique-broken-elasticsearch-1:9200'])   // Utilise l'adresse IP du conteneur ici
+            ->setHosts(['elasticsearch:9200'])
             ->setRetries(2)
             ->setConnectionParams([
                 'client' => [
@@ -47,7 +47,10 @@ readonly class FreelanceSearchService
                 'linkedInUrl' => $freelanceConso->getLinkedInUrl(),
                 'createdAt' => $freelance->getCreatedAt() ? $freelance->getCreatedAt()->format('Y-m-d H:i:s') : null,
                 'updatedAt' => $freelance->getUpdatedAt() ? $freelance->getUpdatedAt()->format('Y-m-d H:i:s') : null
+
             ];
+            // Log des données à indexer
+            $this->logger->info("Indexing document", ['document' => $document]);
 
             try {
                 $this->elasticsearchClient->index([
@@ -62,27 +65,6 @@ readonly class FreelanceSearchService
         }
     }
 
-    // public function indexFreelance(Freelance $freelance): void
-    // {
-    //     $freelanceConso = $freelance->getFreelanceConso();
-    //     $document = [
-    //         'id' => $freelance->getId(),
-    //         'firstName' => $freelanceConso?->getFirstName(),
-    //         'lastName' => $freelanceConso?->getLastName(),
-    //         'jobTitle' => $freelanceConso?->getJobTitle()
-    //     ];
-    //     // Log avant l'indexation
-    //     $this->logger->info("Indexing freelance with ID: " . $freelance->getId());
-
-    //     $this->elasticsearchClient->index([
-    //         'index' => 'freelances',
-    //         'id' => $freelance->getId(),
-    //         'body' => $document
-    //     ]);
-    //     // Log après l'indexation
-    //     $this->logger->info("Freelance indexed with ID: " . $freelance->getId() . " successfully indexed.");
-    // }
-
     public function searchFreelance(string $query): array
     {
         try {
@@ -91,7 +73,7 @@ readonly class FreelanceSearchService
             $health = $this->elasticsearchClient->cluster()->health();
             dd([
                 'health' => $health,
-                'host' => 'test-technique-broken-elasticsearch-1:9200'
+                'host' => (['elasticsearch:9200'])
             ]);
             $params = [
                 'index' => 'freelances',
@@ -109,6 +91,8 @@ readonly class FreelanceSearchService
             $this->logger->info("Searching for query: " . $query);
             // Effectuer la recherche dans Elasticsearch
             $results = $this->elasticsearchClient->search($params);
+            // Log des résultats de la recherche
+            $this->logger->info("Search results:", $results);
 
             // Retourner les résultats avec les données "_source"
             return array_map(function ($hit) {
