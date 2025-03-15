@@ -19,8 +19,8 @@ readonly class FreelanceSearchService
         private LoggerInterface $logger
     ) {
         $this->elasticsearchClient = ClientBuilder::create()
-            ->setHosts(['test-technique-broken-elasticsearch-1:9200'])  // Nom exact du conteneur
-            ->setRetries(2)  // Ajout de tentatives de reconnexion
+            ->setHosts(['test-technique-broken-elasticsearch-1:9200'])   // Utilise l'adresse IP du conteneur ici
+            ->setRetries(2)
             ->setConnectionParams([
                 'client' => [
                     'curl' => [
@@ -31,7 +31,36 @@ readonly class FreelanceSearchService
             ])
             ->build();
     }
+    public function indexFreelance(Freelance $freelance): void
+    {
+        // On récupère les données consolidées de FreelanceConso
+        $freelanceConso = $freelance->getFreelanceConso();
 
+        if ($freelanceConso) {
+            // Prépare le document à indexer
+            $document = [
+                'id' => $freelance->getId(),
+                'firstName' => $freelanceConso->getFirstName(),
+                'lastName' => $freelanceConso->getLastName(),
+                'jobTitle' => $freelanceConso->getJobTitle(),
+                'fullName' => $freelanceConso->getFullName(),
+                'linkedInUrl' => $freelanceConso->getLinkedInUrl(),
+                'createdAt' => $freelance->getCreatedAt() ? $freelance->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                'updatedAt' => $freelance->getUpdatedAt() ? $freelance->getUpdatedAt()->format('Y-m-d H:i:s') : null
+            ];
+
+            try {
+                $this->elasticsearchClient->index([
+                    'index' => 'freelances',
+                    'id' => $freelance->getId(),
+                    'body' => $document
+                ]);
+                $this->logger->info("Freelance indexed successfully: " . $freelance->getId());
+            } catch (\Exception $e) {
+                $this->logger->error("Error indexing freelance: " . $e->getMessage());
+            }
+        }
+    }
 
     // public function indexFreelance(Freelance $freelance): void
     // {
@@ -42,12 +71,16 @@ readonly class FreelanceSearchService
     //         'lastName' => $freelanceConso?->getLastName(),
     //         'jobTitle' => $freelanceConso?->getJobTitle()
     //     ];
+    //     // Log avant l'indexation
+    //     $this->logger->info("Indexing freelance with ID: " . $freelance->getId());
 
     //     $this->elasticsearchClient->index([
     //         'index' => 'freelances',
     //         'id' => $freelance->getId(),
     //         'body' => $document
     //     ]);
+    //     // Log après l'indexation
+    //     $this->logger->info("Freelance indexed with ID: " . $freelance->getId() . " successfully indexed.");
     // }
 
     public function searchFreelance(string $query): array
@@ -72,20 +105,19 @@ readonly class FreelanceSearchService
                     ]
                 ]
             ];
-
+            // Log de l'appel
+            $this->logger->info("Searching for query: " . $query);
+            // Effectuer la recherche dans Elasticsearch
             $results = $this->elasticsearchClient->search($params);
+
+            // Retourner les résultats avec les données "_source"
             return array_map(function ($hit) {
-                return $hit['_source'];
+                return $hit['_source']; // Récupérer les données indexées
             }, $results['hits']['hits']);
         } catch (\Exception $e) {
-            //$this->logger->error('Elasticsearch error: ' . $e->getMessage());
-            //dd($e->getMessage());
-            //return [];
-            dd([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'host' => 'test-technique-broken-elasticsearch-1:9200'
-            ]);
+            // Log de l'erreur
+            $this->logger->error('Elasticsearch error: ' . $e->getMessage());
+            return []; // Retourner un tableau vide en cas d'erreur
         }
     }
 }

@@ -131,6 +131,8 @@ class TechnicalTest extends KernelTestCase
 
         $freelances = $freelanceSearchService->searchFreelance('*');
         $this->assertNotEmpty($freelances, 'No freelances found');
+        $this->assertArrayHasKey('_source', $freelances[0], 'Expected result has no source field');
+        $this->assertArrayHasKey('firstName', $freelances[0]['_source'], 'Expected result has no firstName field');
     }
 
     public function testElasticSearchBasicSearchWithSerializer(): void

@@ -3,37 +3,66 @@
 namespace App\Controller;
 
 use App\Dto\SearchFreelanceConsoDto;
+use App\Entity\Freelance;
 use App\Service\FreelanceSearchService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Doctrine\ORM\EntityManagerInterface;
 //use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 
-
-#[Route("/freelances", name: "freelances_")]
 class FreelanceController extends AbstractController
 {
-    public function __construct(
-        private readonly FreelanceSearchService $freelanceSearchService
-    ) {
+    private EntityManagerInterface $entityManager;
+    private FreelanceSearchService $freelanceSearchService;
+
+    public function __construct(EntityManagerInterface $entityManager, FreelanceSearchService $freelanceSearchService)
+    {
+        $this->entityManager = $entityManager;
+        $this->freelanceSearchService = $freelanceSearchService;
     }
 
-    #[Route('/search', name: 'freelance_search', methods: ['GET'])]
-    public function search(Request $request): JsonResponse
+    /**
+     * @Route("/index/freelances", name="index_freelances")
+     */
+    public function indexFreelances(): Response
     {
-        $query = $request->query->get('q', '*');
-        $results = $this->freelanceSearchService->searchFreelance($query);
-        
-        return $this->json($results);
-    }
+        // Récupère tous les freelances de la base de données
+        $freelances = $this->entityManager->getRepository(Freelance::class)->findAll();
 
-    // route pour la page de recherche
-    #[Route(name: "search_page", path: "/search", methods: ["GET"])]
-    public function searchPage(): Response
-    {
-        return $this->render('freelance/search.html.twig');
+        // Indexe chaque freelance dans Elasticsearch
+        foreach ($freelances as $freelance) {
+            // Prépare les données pour l'indexation (cela pourrait être fait dans un service si nécessaire)
+            $this->freelanceSearchService->indexFreelance($freelance);
+        }
+
+        return new Response('Freelances indexed successfully!', Response::HTTP_OK);
     }
 }
+// #[Route("/freelances", name: "freelances_")]
+// class FreelanceController extends AbstractController
+// {
+//     public function __construct(
+//         private readonly FreelanceSearchService $freelanceSearchService
+//     ) {
+//     }
+
+//     #[Route('/search', name: 'freelance_search', methods: ['GET'])]
+//     public function search(Request $request): JsonResponse
+//     {
+//         $query = $request->query->get('q', '*');
+//         $results = $this->freelanceSearchService->searchFreelance($query);
+        
+//         return $this->json($results);
+//     }
+
+//     // route pour la page de recherche
+//     #[Route(name: "search_page", path: "/search", methods: ["GET"])]
+//     public function searchPage(): Response
+//     {
+//         return $this->render('freelance/search.html.twig');
+//     }
+// }
