@@ -68,7 +68,7 @@ class TechnicalTest extends KernelTestCase
 
         $jsonData = file_get_contents('./datas/jean-paul.json');
 
-        $jeanPaulDtos = $serializer->deserialize($jsonData, 'App\\Dto\\FreelanceJeanPaulDto[]', 'json');
+        $jeanPaulDtos = $serializer->deserialize($jsonData, FreelanceJeanPaulDto::class, 'json');
 
         $this->assertNotEmpty($jeanPaulDtos, '$jeanPaulDtos is null');
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -164,7 +164,7 @@ class TechnicalTest extends KernelTestCase
         $this->assertTrue($freelanceManager->getNumberOfFreelancesInJeanMichelWebsiteHomePage() > 0, 'Method is empty');
     }
 
-    public function testFi-indFirstName(): void
+    public function testFindFirstName(): void
     {
         self::bootKernel();
 

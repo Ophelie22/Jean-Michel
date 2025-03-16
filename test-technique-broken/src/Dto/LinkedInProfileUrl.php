@@ -19,13 +19,13 @@ class LinkedInProfileUrl
         try {
             $baseUrl = 'linkedin.com/in/';
             $linkedInCom = strpos($rawUrl, $baseUrl);
-          
+
             if ($linkedInCom === false || str_ends_with($rawUrl, ":")) {
                 throw new \Exception("No linkedin.com/in/ pattern found");
             }
 
             $cleanUrl = substr($rawUrl, $linkedInCom, strlen($baseUrl));
-            $profilePart = substr($rawUrl, $linkedInCom+strlen($baseUrl));
+            $profilePart = substr($rawUrl, $linkedInCom + strlen($baseUrl));
 
             if (empty($profilePart)) {
                 throw new \Exception("No profile part pattern found");

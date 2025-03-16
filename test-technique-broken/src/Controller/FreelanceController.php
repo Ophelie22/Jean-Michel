@@ -15,40 +15,36 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route("/freelances", name: "freelances_")]
 class FreelanceController extends AbstractController
 {
-    private EntityManagerInterface $entityManager;
-    private FreelanceSearchService $freelanceSearchService;
-
-    public function __construct(EntityManagerInterface $entityManager, FreelanceSearchService $freelanceSearchService)
-    {
-        $this->entityManager = $entityManager;
-        $this->freelanceSearchService = $freelanceSearchService;
-    }
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly FreelanceSearchService $freelanceSearchService
+    ) {}
 
     #[Route("/index", name: "index_freelances")]
-    public function indexFreelances(): Response
+    public function indexFreelances(): JsonResponse
     {
-        // Récupère tous les freelances de la base de données
         $freelances = $this->entityManager->getRepository(Freelance::class)->findAll();
+        $results = $this->freelanceSearchService->indexAllFreelances($freelances);
 
-        // Indexe chaque freelance dans Elasticsearch
-        foreach ($freelances as $freelance) {
-            $this->freelanceSearchService->indexFreelance($freelance);
-        }
-
-        return new Response('Freelances indexed successfully!', Response::HTTP_OK);
+        return $this->json([
+            'message' => 'Indexation terminée',
+            'stats' => $results
+        ]);
     }
+
     #[Route("/search", name: "freelance_search", methods: ["GET"])]
-    public function search(#[MapQueryParameter] SearchFreelanceConsoDto $dto): JsonResponse
+    public function search(#[MapQueryParameter] string $query = '*'): JsonResponse
     {
-        $freelanceConsos = $this->freelanceSearchService->searchFreelance($dto->query);
-        return $this->json($freelanceConsos, Response::HTTP_OK, [], ["groups" => "freelance_conso"]);
+        $freelanceConsos = $this->freelanceSearchService->searchFreelance($query);
+        return $this->json($freelanceConsos);
     }
-    //
-    #[Route("/search-page", name: "search_page", methods: ["GET"])]
-    public function searchPage(): Response
-    {
-        return $this->render('freelance/search.html.twig');
-    }
+
+    // //
+    // #[Route("/search-page", name: "search_page", methods: ["GET"])]
+    // public function searchPage(): Response
+    // {
+    //     return $this->render('freelance/search.html.twig');
+    // }
 }
 
 // #[Route("/freelances", name: "freelances_")]

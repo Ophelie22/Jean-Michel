@@ -104,4 +104,25 @@ readonly class FreelanceSearchService
             return []; // Retourner un tableau vide en cas d'erreur
         }
     }
+
+    public function indexAllFreelances(array $freelances): array
+    {
+        $results = [
+            'success' => 0,
+            'failed' => 0,
+            'total' => count($freelances)
+        ];
+
+        foreach ($freelances as $freelance) {
+            try {
+                $this->indexFreelance($freelance);
+                $results['success']++;
+            } catch (\Exception $e) {
+                $this->logger->error("Error indexing freelance {$freelance->getId()}: {$e->getMessage()}");
+                $results['failed']++;
+            }
+        }
+
+        return $results;
+    }
 }

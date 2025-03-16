@@ -342,3 +342,10 @@ voier mes logs:
 sudo docker logs app
 ou en local:
 sudo docker logs test-technique-broken-app-1
+
+TOTO faire u make file pour docker;
+sudo docker compose ps
+sudo docker network ls
+sudo docker network inspect test-technique-broken_default
+sudo docker compose down
+sudo docker compose up -d
