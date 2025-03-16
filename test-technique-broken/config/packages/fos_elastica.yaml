@@ -7,6 +7,9 @@ fos_elastica:
       properties:
         firstName: ~
         lastName: ~
+        jobTitle: ~
+        linkedinUrl: ~
+        fullName: ~
       persistence:
         driver: orm
         model: App\Entity\FreelanceConso

@@ -324,3 +324,21 @@ curl -X GET "localhost:9201/\_cluster/health?pretty"
 "active_shards_percent_as_number" : 80.0
 }
 sudo docker logs test-technique-broken-elasticsearch-1
+
+Pour lancer mes commandes:
+
+sudo docker compose exec app php bin/console app:freelance:detail 1
+
+voier mes logs:
+sudo docker logs app
+si je lance le test a l'interieur du conteneur pour Elastic Search :
+sudo docker compose exec app php bin/phpunit --filter testElasticSearchBasicSearch
+
+Pour lancer mes commandes:
+
+sudo docker compose exec app php bin/console app:scrap:jean-paul
+
+voier mes logs:
+sudo docker logs app
+ou en local:
+sudo docker logs test-technique-broken-app-1

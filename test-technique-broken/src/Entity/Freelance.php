@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: FreelanceRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Freelance
 {
     #[ORM\Id]
@@ -48,6 +49,14 @@ class Freelance
     {
         $this->freelanceLinkedIns = new ArrayCollection();
         $this->freelanceJeanPauls = new ArrayCollection();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
+    }
+    #[ORM\PrePersist]
+    public function prePersist()
+    {
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     public function getId(): ?int

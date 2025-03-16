@@ -33,7 +33,6 @@ class TechnicalTest extends KernelTestCase
 
         $jsonData = file_get_contents('./datas/linkedin.json');
 
-        // Désérialisation du JSON
         $linkedInDtos = $serializer->deserialize($jsonData, FreelanceLinkedInDto::class . '[]', 'json');
         $this->assertNotEmpty($linkedInDtos, '$linkedInDtos is null');
 
@@ -47,7 +46,7 @@ class TechnicalTest extends KernelTestCase
             // Vérification que jobTitle est bien initialisé
             $this->assertNotNull($linkedInDto->jobTitle, 'jobTitle is null');
 
-            // Traitement du FreelanceLinkedIn
+
             $fLinkedIn = $insertData->insertFreelanceLinkedIn($linkedInDto);
 
             $this->assertNotNull($fLinkedIn, 'FreelanceLinkedIn is null');
@@ -71,9 +70,7 @@ class TechnicalTest extends KernelTestCase
 
         $jeanPaulDtos = $serializer->deserialize($jsonData, 'App\\Dto\\FreelanceJeanPaulDto[]', 'json');
 
-        //message pour valider que le json est bien désérialisé
         $this->assertNotEmpty($jeanPaulDtos, '$jeanPaulDtos is null');
-        //message pour valider que le json est bien désérialisé
         if (json_last_error() !== JSON_ERROR_NONE) {
             echo 'JSON Error: ' . json_last_error_msg();
         }
@@ -108,7 +105,6 @@ class TechnicalTest extends KernelTestCase
     public function testGetFreelanceDetail(): void
     {
         self::bootKernel();
-
         $entityManager = static::getContainer()->get('doctrine')->getManager();
         $freelanceSerializer = static::getContainer()->get(FreelanceSerializer::class);
         $serializer = static::getContainer()->get('serializer');
@@ -168,7 +164,7 @@ class TechnicalTest extends KernelTestCase
         $this->assertTrue($freelanceManager->getNumberOfFreelancesInJeanMichelWebsiteHomePage() > 0, 'Method is empty');
     }
 
-    public function testFindFirstName(): void
+    public function testFi-indFirstName(): void
     {
         self::bootKernel();
 

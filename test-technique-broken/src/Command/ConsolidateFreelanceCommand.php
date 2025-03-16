@@ -27,6 +27,7 @@ class ConsolidateFreelanceCommand extends Command
         /** @var Freelance $freelance */
         foreach ($freelances as $freelance) {
             $this->freelanceConsolider->consolidate($freelance);
+            dd($freelance);
         }
 
         return Command::SUCCESS;
