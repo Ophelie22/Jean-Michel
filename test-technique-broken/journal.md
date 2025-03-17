@@ -1,96 +1,123 @@
-# Guide d'installation et de configuration du projet
+# Notes techniques projet Symfony / Docker
 
-## 1. Lancer le projet
+---
 
-Se placer dans le dossier du projet `test-technique-broken` et exécuter la commande suivante :
+## 1. Lancement du projet
+
+Démarrage des conteneurs Docker :
 
 ```bash
 sudo docker compose up -d
 ```
 
-## 2. Installation de Composer
-
-Installer les dépendances PHP avec :
-
-```bash
-composer install
-```
-
-### 2.1. Erreur de dépendances manquantes
-
-Si une erreur apparaît indiquant l'absence de `asmblah/php-amqp-compat`, installez les paquets nécessaires :
-
-```bash
-sudo apt update
-sudo apt install php-pear php8.3-dev -y
-```
-
-Puis installez l'extension `amqp` :
-
-```bash
-sudo pecl install amqp
-```
-
-Ensuite, installez la bibliothèque `librabbitmq-dev` :
-
-```bash
-sudo apt update
-sudo apt install librabbitmq-dev -y
-```
-
-Relancez l'installation de l'extension `amqp` :
-
-```bash
-sudo pecl install amqp
-```
-
-Ajoutez ensuite l'extension à PHP :
-
-```bash
-echo "extension=amqp.so" | sudo tee -a /etc/php/8.3/cli/php.ini
-echo "extension=amqp.so" | sudo tee -a /etc/php/8.3/fpm/php.ini
-```
-
-- La première ligne ajoute `extension=amqp.so` au fichier de configuration PHP utilisé en ligne de commande (CLI).
-- La deuxième ligne l'ajoute au fichier de configuration PHP utilisé par PHP-FPM (serveur web).
-
-## 3. Vérification des conteneurs Docker
+Vérification des logs des services :
 
 ```bash
 docker logs test-technique-broken-mysql-1
 docker logs test-technique-broken-rabbitmq-1
 docker logs test-technique-broken-elasticsearch-1
+docker logs app
 ```
 
-## 4. Configuration de MySQL
+---
 
-Si vous avez PostgreSQL installé sur votre machine, définissez un mot de passe root pour MySQL et assurez-vous d'utiliser MySQL par défaut :
+## 2. Installation des dépendances PHP
+
+Installer via Composer :
 
 ```bash
-sudo mysql -u root
+composer install
 ```
 
-Vérifiez si la base de données contient des tables :
+### Résolution erreur `asmblah/php-amqp-compat`
+
+Si une erreur apparaît concernant `asmblah/php-amqp-compat`, installer l'extension AMQP :
+
+```bash
+sudo apt install librabbitmq-dev
+sudo pecl install amqp
+```
+
+---
+
+## 3. Vérifications Docker et base de données
+
+- Vérifier les tables existantes :
 
 ```bash
 php bin/console doctrine:query:sql "SHOW TABLES;"
 ```
 
-## 5. Vérification des routes disponibles
+- Statut des migrations Doctrine :
+
+```bash
+php bin/console doctrine:migrations:status
+php bin/console debug:container --parameter database_url
+```
+
+---
+
+## 4. Création / Migration BDD
+
+```bash
+symfony console doctrine:database:create
+symfony console doctrine:migrations:migrate
+```
+
+---
+
+## 4. Elasticsearch
+
+Créer et peupler l'index Elasticsearch :
+
+```bash
+php bin/console fos:elastica:create
+php bin/console fos:elastica:populate
+```
+
+### Vérifications Elasticsearch
+
+- Elasticsearch actif :
+
+```bash
+sudo docker ps | grep elasticsearch
+```
+
+- Vérifier l'accès Elasticsearch :
+
+```bash
+curl http://localhost:9201
+```
+
+- Vérifier les données indexées :
+
+```bash
+curl -X GET "localhost:9201/freelances/_search?pretty"
+```
+
+- Vérifier le mapping :
+
+```bash
+curl -X GET "localhost:9201/freelances/_mapping?pretty"
+```
+
+- Vérifier l'état du cluster :
+
+```bash
+curl -X GET "localhost:9201/_cluster/health?pretty"
+```
+
+**Statut Yellow** : Unassigned shards à vérifier.
+
+---
+
+## 5. Routes disponibles
+
+Afficher les routes Symfony :
 
 ```bash
 php bin/console debug:router
 ```
-
-Si vous obtenez l'avertissement suivant :
-
-```
-PHP Warning: Module "amqp" is already loaded in Unknown on line 0
-```
-
-C'est que le module `amqp` est déjà chargé.
-
-### Routes existantes :
 
 | Name              | Method | Scheme | Host | Path                       |
 | ----------------- | ------ | ------ | ---- | -------------------------- |
@@ -98,34 +125,40 @@ C'est que le module `amqp` est déjà chargé.
 | freelances_search | GET    | ANY    | ANY  | /freelances                |
 | status_up         | POST   | ANY    | ANY  | /status/up                 |
 
-## 6. Installation de bundles manquants
+---
 
-Installation de `maker-bundle` et `nesbot/carbon` :
+## 5. Installation de bundles manquants
 
 ```bash
 composer require symfony/maker-bundle
 composer require nesbot/carbon
 ```
 
-## 7. Vérification de l'état de la base de données
+---
 
-```bash
-sudo docker ps | grep mysql
-php bin/console doctrine:migrations:status
-php bin/console debug:container --parameter database_url
+## 5. Problèmes courants
+
+- **Warning AMQP déjà chargé** :
+
+```
+PHP Warning: Module "amqp" is already loaded in Unknown on line 0
 ```
 
-### Problèmes rencontrés
+Résolu en vérifiant le chargement du module dans `php.ini`.
 
-- En exécutant :
+- **Erreur autowiring Elasticsearch** :
 
-```bash
-php bin/console doctrine:query:sql "SHOW TABLES;"
+```
+Cannot autowire service "App\Service\FreelanceSearchService": argument "$elasticsearchClient" of method "__construct()" references class "Elasticsearch\Client" but no such service exists.
 ```
 
-- **Problème :** `0 rows in the table`
+Vérifier la déclaration du service Elasticsearch dans les services Symfony.
 
-## 8. Rappel pour relancer l'application
+---
+
+## 6. Commandes utiles
+
+### Relancer l'application :
 
 ```bash
 php bin/console cache:clear
@@ -133,52 +166,53 @@ php bin/console doctrine:mapping:info
 php bin/console doctrine:schema:validate
 ```
 
-Création et migration de la base de données :
+### Créer et migrer la base :
 
 ```bash
 symfony console doctrine:database:create
 symfony console doctrine:migrations:migrate
 ```
 
-## 9. Création de l'index Elasticsearch
+### Commandes Docker fréquentes :
 
 ```bash
-php bin/console fos:elastica:create
-php bin/console fos:elastica:populate
+sudo docker compose ps
+sudo docker compose up -d
+sudo docker compose down
+sudo docker network ls
+sudo docker network inspect test-technique-broken_default
 ```
 
-### Problèmes rencontrés
+---
 
-- **Problème :** `PHP Warning: Module "amqp" is already loaded in Unknown on line 0`
-- **Problème :** `Cannot autowire service "App\Service\FreelanceSearchService": argument "$elasticsearchClient" of method "__construct()" references class "Elasticsearch\Client" but no such service exists.`
+## 7. Tests unitaires
 
-### TODO : Vérifier Elasticsearch
-
-- **Vérifier si Elasticsearch tourne bien** :
+Exécuter des tests :
 
 ```bash
-sudo docker ps | grep elasticsearch
+export IS_DOCKER=true
+php bin/phpunit --filter testConnector tests/TechnicalTest.php
+php bin/phpunit --filter testImportLinkedIn tests/TechnicalTest.php
+php bin/phpunit --filter testEnvDocker tests/TechnicalTest.php
 ```
 
-- **Vérifier l'accès à Elasticsearch** :
+---
+
+## 8. Commandes spécifiques du projet
+
+- Scrap des données LinkedIn :
 
 ```bash
-curl http://localhost:9201
+sudo docker compose exec app php bin/console app:scrap:jean-paul
 ```
 
-Si l'accès est fonctionnel, le problème vient probablement de la configuration.
-
-### TODO : Vérifier pourquoi les données ne s'affichent pas dans la recherche
-
-## 10. Recherche Freelance
-
-Exécution de la commande de recherche :
+- Recherche freelance :
 
 ```bash
 php bin/console app:freelance:search "jobTitle"
 ```
 
-Recherche avec l'URL :
+Recherche via URL :
 
 ```
 /freelances/search?query=Développeur&page=1&limit=10
@@ -186,166 +220,29 @@ Recherche avec l'URL :
 
 ---
 
-## DONE : Tests unitaires
+## 9. Concepts appris récemment
 
-### `TechnicalTest.php`
+### Circular Reference Handler
 
-#### `testConnector`
+Permet de spécifier comment gérer les références circulaires en sérialisation :
 
-Le test `testConnector` fonctionne.
-
-**Manipulation :**
-
-```bash
-export IS_DOCKER=true
-php bin/phpunit --filter testConnector tests/TechnicalTest.php
+```php
+circular_reference_handler: fn($object) => $object->getId()
 ```
 
-#### `testImportLinkedIn`
+### ScrapLinkCommand
 
-```bash
-export IS_DOCKER=true
-php bin/phpunit --filter testImportLinkedIn tests/TechnicalTest.php
-```
+Cette commande récupère des données LinkedIn depuis un fichier JSON pour les insérer en base via un message bus (`InsertFreelanceLinkedInMessage`).
 
 ---
 
-php bin/console debug:container --env-vars | grep ELASTICSEARCH_URL
-ophelie@ophelie-BMH-WCX9:~/jm-test-technique-060325/test-technique-broken$ export IS_DOCKER=true
-ophelie@ophelie-BMH-WCX9:~/jm-test-technique-060325/test-technique-broken$ php bin/phpunit --filter testEnvDocker tests/TechnicalTest.php
-PHP Warning: Module "amqp" is already loaded in Unknown on line 0
-PHPUnit 9.6.22 by Sebastian Bergmann and contributors.
+## 9. TODO à court terme
 
-Testing App\Tests\TechnicalTest
-. 1 / 1 (100%)
+- Vérifier pourquoi Elasticsearch n'affiche pas les données dans la recherche
+- Corriger le statut "yellow" d'Elasticsearch
+- Décider de supprimer ou non la route dans `FreelanceController` liée au template Twig.
+- Mettre en place un Makefile Docker
 
-Time: 00:00.062, Memory: 14.00 MB
+---
 
-OK (1 test, 1 assertion)
-
-A quoi sert le ScrapLinkCommand ?
-
-- Récupérer les données de LinkedIn
-- Les insérer dans la base de données
-
-Quel est le rôle du message InsertFreelanceLinkedInMessage ?
-ommande Symfony (ScrapLinkedInCommand) :
-La commande scrap:linkedin lit un fichier JSON, le désérialise en objets DTO, puis envoie ces objets au Message Bus pour un traitement ultérieur.
-
-Fichier JSON :
-Le fichier jean-paul.json contient les données à désérialiser en objets DTO.
-
-# Point nouveau que je connaissais pas
-
-Ajout du circular_reference_handler dans le contexte : Le contexte circular_reference_handler permet de spécifier comment gérer les références circulaires. Ici, nous avons choisi de simplement retourner l'ID de l'objet pour éviter une boucle infinie dans les relations entre objets.
-Gestion des groupes : Nous avons conservé les groupes de sérialisation dans le contexte ('groups' => $groups), car tu en as besoin pour spécifier quelles propriétés sérialiser.
-
-Today: Connexion à ElasticSearch ok mais j'etais partie ds la mauuvaise directin en voulant mettre une barre de recherche sur une page twig le premier jour à mon avis
-manip et resultatat :
-
-curl http://localhost:9201
-{
-"name" : "423ac1b1157b",
-"cluster_name" : "docker-cluster",
-"cluster_uuid" : "F2PNM0yHT6ei_zavUxbZYg",
-"version" : {
-"number" : "7.16.3",
-"build_flavor" : "default",
-"build_type" : "docker",
-"build_hash" : "4e6e4eab2297e949ec994e688dad46290d018022",
-"build_date" : "2022-01-06T23:43:02.825887787Z",
-"build_snapshot" : false,
-"lucene_version" : "8.10.1",
-"minimum_wire_compatibility_version" : "6.8.0",
-"minimum_index_compatibility_version" : "6.0.0-beta1"
-},
-"tagline" : "You Know, for Search"
-}
-PROBLEME: la connexion se fait avec ElasticSearck mais par contre ca recupere pas les données de la base de données:
-curl -X GET "localhost:9201/freelances/\_search?pretty"
-{
-"took" : 9,
-"timed_out" : false,
-"\_shards" : {
-"total" : 1,
-"successful" : 1,
-"skipped" : 0,
-"failed" : 0
-},
-"hits" : {
-"total" : {
-"value" : 1,
-"relation" : "eq"
-},
-"max_score" : 1.0,
-"hits" : [
-{
-"_index" : "freelances",
-"_type" : "_doc",
-"_id" : "1",
-"_score" : 1.0,
-"_source" : {
-"firstName" : "John",
-"lastName" : "Doe",
-"jobTitle" : "Developer"
-}
-}
-]
-}
-}
-Commande de deugage :
-php bin/console debug:container FreelanceSearchService
-
-Ok je crois que le mapping est pas juste car car j'ontiens les resultas des donnes rentrees manuelement en faisant :
-curl -X GET "localhost:9201/freelances/\_mapping?pretty"
-
-15/03/2025
-Rectification de mon controller FreelanceController.php
-
-TODO; a voir si je le supprime ou pas car y'a une route qui va faire un fichier twig , donc voir sir je la supprime oou pas ou si je met un template en place si j'ai le temps
-
-Mapping rectifié pour Elasticsearch mais un statut Yellow:
-curl -X GET "localhost:9201/\_cluster/health?pretty"
-{
-"cluster_name" : "docker-cluster",
-"status" : "yellow",
-"timed_out" : false,
-"number_of_nodes" : 1,
-"number_of_data_nodes" : 1,
-"active_primary_shards" : 4,
-"active_shards" : 4,
-"relocating_shards" : 0,
-"initializing_shards" : 0,
-"unassigned_shards" : 1,
-"delayed_unassigned_shards" : 0,
-"number_of_pending_tasks" : 0,
-"number_of_in_flight_fetch" : 0,
-"task_max_waiting_in_queue_millis" : 0,
-"active_shards_percent_as_number" : 80.0
-}
-sudo docker logs test-technique-broken-elasticsearch-1
-
-Pour lancer mes commandes:
-
-sudo docker compose exec app php bin/console app:freelance:detail 1
-
-voier mes logs:
-sudo docker logs app
-si je lance le test a l'interieur du conteneur pour Elastic Search :
-sudo docker compose exec app php bin/phpunit --filter testElasticSearchBasicSearch
-
-Pour lancer mes commandes:
-
-sudo docker compose exec app php bin/console app:scrap:jean-paul
-
-voier mes logs:
-sudo docker logs app
-ou en local:
-sudo docker logs test-technique-broken-app-1
-
-TOTO faire u make file pour docker;
-sudo docker compose ps
-sudo docker network ls
-sudo docker network inspect test-technique-broken_default
-sudo docker compose down
-sudo docker compose up -d
+**Dernière mise à jour : 15/03/2025**
