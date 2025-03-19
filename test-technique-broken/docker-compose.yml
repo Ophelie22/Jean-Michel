@@ -9,7 +9,7 @@ services:
       - MYSQL_DATABASE=test_technique
       - MYSQL_PASSWORD=root
     ports:
-      - 3306:3306
+      - 3344:3306
 
   adminer:
     image: adminer

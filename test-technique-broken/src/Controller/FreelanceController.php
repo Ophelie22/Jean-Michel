@@ -53,7 +53,7 @@ class FreelanceController extends AbstractController
 //     public function __construct(
 //         private readonly FreelanceSearchService $freelanceSearchService
 //     ) {
-//     }
+//     }=
 
 //     #[Route('/search', name: 'freelance_search', methods: ['GET'])]
 //     public function search(Request $request): JsonResponse
